@@ -1,5 +1,5 @@
 module V1
-  class Categories
+  class Categories < BaseGrapeAPI
     mounted do
 
     end

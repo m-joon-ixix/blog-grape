@@ -6,18 +6,18 @@ default: &default
 
 development: &development
   <<: *default
-  database: digging_stock_development
+  database: blog_grape_development
   host: 127.0.0.1
   username: root
   password:
 
 test:
   <<: *development
-  database: <%= "digging_stock_test#{ENV['TEST_ENV_NUMBER']}" %>
+  database: <%= "blog_grape_test#{ENV['TEST_ENV_NUMBER']}" %>
 
 production:
   <<: *default
-  database: <%= ENV['DATABASE_NAME'] || 'kakastock_production' %>
+  database: <%= ENV['DATABASE_NAME'] || 'milesblog_production' %>
   host: <%= ENV['DATABASE_HOST'] %>
   username: <%= ENV['DATABASE_USERNAME'] %>
   password: <%= ENV['DATABASE_PASSWORD'] %>

@@ -29,7 +29,7 @@ gem 'uglifier', '>= 1.3.0'
 gem "awesome_print"
 
 group :development, :test do
-  gem 'factory_girl_rails', '~> 4.8'
+  gem 'factory_bot_rails'
   gem 'faker', '~> 1.7', '>= 1.7.3'
   gem 'pry', '~> 0.10.4'
   gem "rspec-rails", "~> 3.0"

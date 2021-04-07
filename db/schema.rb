@@ -10,12 +10,13 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20210406074653) do
+ActiveRecord::Schema.define(version: 20210407022058) do
 
   create_table "categories", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.string "name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "num_of_posts"
   end
 
   create_table "comments", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
@@ -33,6 +34,7 @@ ActiveRecord::Schema.define(version: 20210406074653) do
     t.integer "category_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "num_of_comments"
   end
 
   create_table "users", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
@@ -51,6 +53,8 @@ ActiveRecord::Schema.define(version: 20210406074653) do
     t.string "current_sign_in_ip"
     t.string "last_sign_in_ip"
     t.integer "api_level", default: 0, null: false
+    t.string "access_token"
+    t.index ["access_token"], name: "index_users_on_access_token"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end

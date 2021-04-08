@@ -11,24 +11,37 @@ module V1
           success_response(nil, represented.as_json)
         end
 
-        desc '특정 사용자 조회', entity: ::V1::Entities::User
+        namespace :posts do
+          desc '현재 사용자의 게시글 조회', entity: ::V1::Entities::Post
+          get do
+            posts = Post.where(user_id: current_user.id)
+
+            failure_response('현재 사용자의 게시글이 없습니다.') if posts.empty?
+            represented = ::V1::Entities::Post.represent(posts)
+            success_response(nil, represented.as_json)
+          end
+        end
+
         params { requires :id, type: String, desc: '검색할 사용자 ID. 콤마로 구분' }
-        get ':id' do
-          ids = params[:id].split(',').map(&:to_i)
-          # DASHBOARD인 유저는 모든 검색 가능. 그렇지 않으면 본인만 검색 가능.
-          filtered_ids = if current_user.api_level == User::ApiLevel::DASHBOARD
-                           ids
-                         elsif ids.include? current_user.id
-                           [current_user.id]
-                         else
-                           []
-                         end
+        resource ':id' do
+          desc '특정 사용자 조회', entity: ::V1::Entities::User
+          get do
+            ids = params[:id].split(',').map(&:to_i)
+            # DASHBOARD인 유저는 모든 검색 가능. 그렇지 않으면 본인만 검색 가능.
+            filtered_ids = if current_user.api_level == User::ApiLevel::DASHBOARD
+                             ids
+                           elsif ids.include? current_user.id
+                             [current_user.id]
+                           else
+                             []
+                           end
 
-          users = User.where(id: filtered_ids)
-          return failure_response('업체를 찾을 수 없습니다.') if users.empty?
+            users = User.where(id: filtered_ids)
+            return failure_response('사용자를 찾을 수 없습니다.') if users.empty?
 
-          represented = ::V1::Entities::User.represent(users)
-          success_response(nil, represented.as_json)
+            represented = ::V1::Entities::User.represent(users)
+            success_response(nil, represented.as_json)
+          end
         end
       end
     end

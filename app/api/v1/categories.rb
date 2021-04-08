@@ -13,17 +13,6 @@ module V1
           success_response(nil, represented.as_json)
         end
 
-        desc '특정 카테고리 조회', entity: ::V1::Entities::Category
-        params { requires :id, type: String, desc: '검색하려는 카테고리 ID. 콤마로 구분' }
-        get ':id' do
-          ids = params[:id].split(',').map(&:to_i)  # [1, 2, 3]
-          categories = Category.where(id: ids)
-          return failure_response('해당 카테고리를 찾을 수 없습니다.') if categories.empty?
-
-          represented = ::V1::Entities::Category.represent(categories)
-          success_response(nil, represented.as_json)
-        end
-
         desc '카테고리 추가', entity: ::V1::Entities::Category, consumes: ['application/x-www-form-urlencoded']
         params { requires :name, type: String, desc: '추가할 카테고리 이름' }
         post do
@@ -33,7 +22,35 @@ module V1
           return failure_response('카테고리 생성에 실패했습니다.', category.errors.messages) unless category.save
 
           represented = ::V1::Entities::Category.represent(category)
-          success_response(nil, category.as_json)
+          success_response(nil, represented.as_json)
+        end
+
+        resource ':id' do
+          params { requires :id, type: String, desc: '검색하려는 카테고리 ID. 콤마로 구분' }
+
+          desc '특정 카테고리 조회', entity: ::V1::Entities::Category
+          get do
+            ids = params[:id].split(',').map(&:to_i)
+            categories = Category.where(id: ids)
+            return failure_response('해당 카테고리를 찾을 수 없습니다.') if categories.empty?
+
+            represented = ::V1::Entities::Category.represent(categories)
+            success_response(nil, represented.as_json)
+          end
+
+          namespace :posts do
+            desc '특정 카테고리들의 게시글 조회', entity: ::V1::Entities::Post
+            get do
+              ids = params[:id].split(',').map(&:to_i)
+              return failure_response('해당 카테고리를 찾을 수 없습니다.') if Category.where(id: ids).empty?
+
+              posts = Post.where(category_id: ids)
+              return failure_response('해당 카테고리에는 게시글이 존재하지 않습니다.') if posts.empty?
+
+              represented = ::V1::Entities::Post.represent(posts)
+              success_response(nil, represented.as_json)
+            end
+          end
         end
       end
     end

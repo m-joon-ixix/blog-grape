@@ -15,8 +15,6 @@ module V1
           desc '현재 사용자의 게시글 조회', entity: ::V1::Entities::Post
           get do
             posts = Post.where(user_id: current_user.id)
-
-            failure_response('현재 사용자의 게시글이 없습니다.') if posts.empty?
             represented = ::V1::Entities::Post.represent(posts)
             success_response(nil, represented.as_json)
           end

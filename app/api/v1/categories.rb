@@ -7,8 +7,6 @@ module V1
       namespace :category do
         desc '전체 카테고리 목록', entity: ::V1::Entities::Category
         get do
-          return failure_response('카테고리가 존재하지 않습니다.') unless Category.exists?
-
           represented = ::V1::Entities::Category.represent(Category.all)
           success_response(nil, represented.as_json)
         end
@@ -45,8 +43,6 @@ module V1
               return failure_response('해당 카테고리를 찾을 수 없습니다.') if Category.where(id: ids).empty?
 
               posts = Post.where(category_id: ids)
-              return failure_response('해당 카테고리에는 게시글이 존재하지 않습니다.') if posts.empty?
-
               represented = ::V1::Entities::Post.represent(posts)
               success_response(nil, represented.as_json)
             end

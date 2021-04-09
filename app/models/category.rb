@@ -14,8 +14,7 @@ class Category < ApplicationRecord
   # when destroying the category, leave the posts and only change their categories to 'others'
   def eliminate_category_from_posts
     posts.each do |post|
-      post.category_id = 0
-      post.save
+      post.change_category(0)  # category.find(0) : others category
     end
   end
 

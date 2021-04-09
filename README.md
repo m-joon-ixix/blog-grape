@@ -1,24 +1,28 @@
-# README
+# Multi-user Blog
+* for practicing Rails Grape API
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+This is a multi-user blog that was made by Minjoon Choi, in order to practice Ruby on Rails, Grape API.
 
-Things you may want to cover:
+The blog supports the following functions, currently only in API request and response.
+* A user can login.
+* A user can post, and leave comments on others' posts.
+* A post can be designated to be in a category.
+* A user can add a new category.
 
-* Ruby version
 
-* System dependencies
+Project Specification:
 
-* Configuration
+* Ruby version: 2.4.9
 
-* Database creation
+* Rails version: 5.1.7
 
-* Database initialization
+* Configuration: TBD
 
-* How to run the test suite
+* Database: mySQL, InnoDB engine, encoding UTF-8
 
-* Services (job queues, cache servers, search engines, etc.)
+* How to run the test suite: TBD
 
-* Deployment instructions
+* Services (job queues, cache servers, search engines, etc.): TBD
 
-* ...
+* Deployment instructions: TBD
+

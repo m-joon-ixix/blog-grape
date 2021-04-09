@@ -5,7 +5,6 @@ class Post < ApplicationRecord
 
   validates :title, presence: true, length: { minimum: 5 }
   validates :body, presence: true
-  validates :user_id, presence: true
   validates :num_of_comments, numericality: { greater_than_or_equal_to: 0 }
 
   # relationship with Category

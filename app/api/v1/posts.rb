@@ -29,6 +29,16 @@ module V1
           success_response(nil, represented.as_json)
         end
 
+        desc '현재 사용자의 게시글 전체 삭제'
+        delete do
+          posts = Post.where(user_id: current_user.id)
+
+          return failure_response('현재 사용자의 게시글이 존재하지 않습니다.') if posts.empty?
+          # hook for bulk-deletion
+          posts.each { |post| post.decrement_num_of_posts }
+          success_response("#{current_user.id}번 사용자의 모든 게시글을 삭제하였습니다.") if posts.delete_all
+        end
+
         params { requires :id, type: String, desc: '검색할 게시글 ID. 콤마로 구분' }
         resource ':id' do
           desc '특정 게시글 조회', entity: ::V1::Entities::Post
@@ -40,6 +50,23 @@ module V1
 
             represented = ::V1::Entities::Post.represent(posts)
             success_response(nil, represented.as_json)
+          end
+
+          desc '특정 게시글 삭제'
+          delete do
+            ids = params[:id].split(',').map(&:to_i)
+            posts = Post.where(id: ids)
+            return failure_response('해당하는 게시글이 존재하지 않습니다.') if posts.empty?
+
+            posts = posts.where(user_id: current_user.id)
+            return failure_response('귀하가 삭제할 수 없는 게시글입니다.') if posts.empty?
+
+            deleted_ids = posts.pluck(:id)
+            # make sure the hook is considered (before bulk-deletion)
+            posts.each { |post| post.decrement_num_of_posts }
+            posts.delete_all
+            success_response('삭제 완료. 삭제된 게시글 ID 번호는 다음과 같습니다.',
+                             { ID: deleted_ids }.as_json )
           end
 
           namespace :comments do

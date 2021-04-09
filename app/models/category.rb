@@ -11,10 +11,11 @@ class Category < ApplicationRecord
     self.num_of_posts = 0
   end
 
-  # when destroying the category, leave the posts and only get rid of their category_ids
+  # when destroying the category, leave the posts and only change their categories to 'others'
   def eliminate_category_from_posts
     posts.each do |post|
-      post.category_id = nil
+      post.category_id = 0
+      post.save
     end
   end
 

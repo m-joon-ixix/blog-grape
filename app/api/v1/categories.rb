@@ -36,6 +36,22 @@ module V1
             success_response(nil, represented.as_json)
           end
 
+          desc '특정 카테고리 삭제'
+          delete do
+
+            ids = params[:id].split(',').map(&:to_i)
+            categories = Category.where(id: ids)
+
+            return failure_response('해당 카테고리가 존재하지 않습니다.') if categories.empty?
+            deleted_names = categories.pluck(:name)
+
+            # delete_all은 before_destroy hook을 무시하기 때문에, 미리 eliminate_category를 해줘야 한다.
+            categories.each { |category| category.eliminate_category_from_posts }
+            categories.delete_all
+            success_response('삭제 완료. 삭제된 카테고리의 이름들은 다음과 같습니다.',
+                             { name: deleted_names }.as_json )
+          end
+
           namespace :posts do
             desc '특정 카테고리들의 게시글 조회', entity: ::V1::Entities::Post
             get do

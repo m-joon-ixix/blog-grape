@@ -58,8 +58,11 @@ module V1
             posts = Post.where(id: ids)
             return failure_response('해당하는 게시글이 존재하지 않습니다.') if posts.empty?
 
-            posts = posts.where(user_id: current_user.id)
-            return failure_response('귀하가 삭제할 수 없는 게시글입니다.') if posts.empty?
+            # DASHBOARD api_level 사용자는 어떤 게시글이든 삭제 권한을 갖고 있음
+            unless current_user.is_admin?
+              posts = posts.where(user_id: current_user.id)
+              return failure_response('귀하가 삭제할 수 없는 게시글입니다.') if posts.empty?
+            end
 
             deleted_ids = posts.pluck(:id)
             # make sure the hook is considered (before bulk-deletion)

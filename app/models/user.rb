@@ -6,11 +6,20 @@ class User < ApplicationRecord
   has_many :posts, dependent: :destroy
   has_many :comments, dependent: :destroy
 
+  before_create :allocate_default_api_level
   before_save :allocate_access_token
 
   module ApiLevel
     DEFAULT = 0
     DASHBOARD = 1
+  end
+
+  def is_admin?
+    self.api_level == ApiLevel::DASHBOARD
+  end
+
+  def allocate_default_api_level
+    self.api_level = ApiLevel::DEFAULT if self.api_level.nil?
   end
 
   def allocate_access_token

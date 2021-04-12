@@ -14,6 +14,7 @@ module V1
         desc '카테고리 추가', entity: ::V1::Entities::Category, consumes: ['application/x-www-form-urlencoded']
         params { requires :name, type: String, desc: '추가할 카테고리 이름' }
         post do
+          return failure_response('카테고리를 생성할 권한이 없습니다.') unless current_user.is_admin?
           return failure_response('이미 존재하는 카테고리입니다.') unless Category.find_by_name(params[:name]).nil?
 
           category = Category.new(name: params[:name])
@@ -38,6 +39,7 @@ module V1
 
           desc '특정 카테고리 삭제'
           delete do
+            return failure_response('카테고리를 삭제할 권한이 없습니다.') unless current_user.is_admin?
 
             ids = params[:id].split(',').map(&:to_i)
             categories = Category.where(id: ids)

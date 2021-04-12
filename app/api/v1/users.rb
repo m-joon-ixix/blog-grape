@@ -75,6 +75,24 @@ module V1
             success_response('사용자 삭제 완료. 삭제된 사용자들의 이메일은 다음과 같습니다.',
                              { email: deleted_names }.as_json)
           end
+
+          namespace :control_api_level do
+            desc '특정 사용자에게 관리자 권한 (DASHBOARD api_level) 부여 또는 박탈', entity: ::V1::Entities::User
+            params { requires :dashboard, type: Boolean, desc: '관리자 권한 부여 여부 (True/False)'}
+            put do
+              return failure_response('권한이 없습니다.') unless current_user.is_admin?
+
+              ids = params[:id].split(',').map(&:to_i)
+              users = User.where(id: ids)
+              return failure_response('사용자를 찾을 수 없습니다.') if users.empty?
+
+              api_level = params[:dashboard] ? User::ApiLevel::DASHBOARD : User::ApiLevel::DEFAULT
+              users.each { |user| user.update(api_level: api_level) }
+
+              represented = ::V1::Entities::User.represent(users)
+              success_response('다음 사용자들의 관리자 권한이 업데이트 되었습니다.', represented.as_json)
+            end
+          end
         end
       end
     end

@@ -1,33 +1,33 @@
 module V1
   class Users < BaseGrapeAPI
     mounted do
-      before { authenticate! }
-      params { requires :access_token, type: String, desc: '엑세스 토큰' }
-
-      namespace :user do
-        desc '현재 사용자 조회', entity: ::V1::Entities::User
-        get do
-          represented = ::V1::Entities::User.represent(current_user)
-          success_response(nil, represented.as_json)
-        end
-
-        desc '신규 사용자 추가 (관리자만 가능)', entity: ::V1::Entities::User
+      # authentication 전에 회원가입하는 API
+      namespace :signup do
+        desc '회원가입 (사용자 추가)', entity: ::V1::Entities::User
         params do
           requires :email, type: String, desc: '사용자 이메일'
           requires :password, type: String, desc: '비밀번호'
           optional :user_name, type: String, desc: '사용자 이름'
           optional :age, type: Integer, desc: '연령'
-          optional :api_level, type: Integer, desc: '접근권한 (0 또는 1)'
         end
         post do
-          return failure_response('사용자를 등록할 권한이 없습니다.') unless current_user.is_admin?
-
           full_params = declared(params)  # including every optional but not assigned params
-          full_params.delete(:access_token)  # don't put in the current_user's access_token
           user = User.new(full_params)
           return failure_response('사용자 등록에 실패했습니다.') unless user.save
 
           represented = ::V1::Entities::User.represent(user)
+          success_response(nil, represented.as_json)
+        end
+      end
+
+      namespace :user do
+        # need to be authenticated to continue from here
+        before { authenticate! }
+        params { requires :access_token, type: String, desc: '엑세스 토큰' }
+
+        desc '현재 사용자 조회', entity: ::V1::Entities::User
+        get do
+          represented = ::V1::Entities::User.represent(current_user)
           success_response(nil, represented.as_json)
         end
 

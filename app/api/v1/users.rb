@@ -70,7 +70,8 @@ module V1
             return failure_response('사용자를 찾을 수 없습니다.') if users.empty?
 
             deleted_names = users.pluck(:email)
-            users.delete_all
+            # 삭제되는 user와 연관된 post, comment가 모두 destroy 될 수 있도록 bulk-deletion은 하지 않는다.
+            users.each { |user| user.destroy }
             success_response('사용자 삭제 완료. 삭제된 사용자들의 이메일은 다음과 같습니다.',
                              { email: deleted_names }.as_json)
           end

@@ -34,9 +34,9 @@ module V1
           posts = Post.where(user_id: current_user.id)
 
           return failure_response('현재 사용자의 게시글이 존재하지 않습니다.') if posts.empty?
-          # hook for bulk-deletion
-          posts.each { |post| post.decrement_num_of_posts }
-          success_response("#{current_user.id}번 사용자의 모든 게시글을 삭제하였습니다.") if posts.delete_all
+          # bulk-deletion 하면 연관된 comment가 destroy 되지를 않는다. 그러므로 post 하나씩 삭제.
+          posts.each { |post| post.destroy }
+          success_response("#{current_user.id}번 사용자의 모든 게시글을 삭제하였습니다.")
         end
 
         params { requires :id, type: String, desc: '검색할 게시글 ID. 콤마로 구분' }
@@ -65,9 +65,8 @@ module V1
             end
 
             deleted_ids = posts.pluck(:id)
-            # make sure the hook is considered (before bulk-deletion)
-            posts.each { |post| post.decrement_num_of_posts }
-            posts.delete_all
+            # bulk-deletion 하면 연관된 comment가 destroy 되지를 않는다. 그러므로 post 하나씩 삭제.
+            posts.each { |post| post.destroy }
             success_response('삭제 완료. 삭제된 게시글 ID 번호는 다음과 같습니다.',
                              { ID: deleted_ids }.as_json )
           end

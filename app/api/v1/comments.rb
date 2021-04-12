@@ -32,7 +32,7 @@ module V1
             success_response(nil, represented.as_json)
           end
 
-          desc '특정 댓글 삭제. DASHBOARD-level 사용자가 아니라면 권한은 댓글 작성자에게만 있음'
+          desc '특정 댓글 삭제. DASHBOARD-level 사용자가 아니라면 권한은 댓글 작성자와 게시글 작성자에게만 있음'
           delete do
             ids = params[:id].split(',').map(&:to_i)
             comments = Comment.where(id: ids)
@@ -40,7 +40,8 @@ module V1
 
             # DASHBOARD-level 사용자는 어떤 댓글이든 삭제 가능
             unless current_user.is_admin?
-              comments = comments.where(user_id: current_user.id)
+              # only get the comments that 'current_user' can delete
+              comments = comments.able_to_delete(current_user.id)
               return failure_response('이 댓글들을 삭제할 권한이 없습니다.') if comments.empty?
             end
 

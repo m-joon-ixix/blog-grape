@@ -1,6 +1,7 @@
 class Comment < ApplicationRecord
   belongs_to :post
   belongs_to :user
+  has_many :user_like_comments, dependent: :destroy
 
   # relationship with Post
   after_create :increment_num_of_comments

@@ -1,5 +1,6 @@
 class Post < ApplicationRecord
   has_many :comments, dependent: :destroy
+  has_many :user_like_posts, dependent: :destroy
   belongs_to :user
   belongs_to :category
 

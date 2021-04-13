@@ -1,5 +1,5 @@
 module V2
-  class Posts
+  class Posts < BaseGrapeAPI
     mounted do
 
     end

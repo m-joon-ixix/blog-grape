@@ -1,5 +1,5 @@
 module V2
-  class Comments
+  class Comments < BaseGrapeAPI
     mounted do
 
     end

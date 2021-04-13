@@ -5,15 +5,15 @@ module V1
       namespace :signup do
         desc '회원가입 (사용자 추가)', entity: ::V1::Entities::User
         params do
-          requires :email, type: String, desc: '사용자 이메일'
-          requires :password, type: String, desc: '비밀번호'
+          requires :email, type: String, desc: '사용자 이메일', regexp: /\A[^@\s]+@[^@\s]+\.[^@\s]+\z/
+          requires :password, type: String, desc: '비밀번호', length: 6..20
           optional :user_name, type: String, desc: '사용자 이름'
           optional :age, type: Integer, desc: '연령'
         end
         post do
           full_params = declared(params)  # including every optional but not assigned params
           user = User.new(full_params)
-          return failure_response('사용자 등록에 실패했습니다.') unless user.save
+          return failure_response('사용자 등록에 실패했습니다.', user.errors) unless user.save
 
           represented = ::V1::Entities::User.represent(user)
           success_response(nil, represented.as_json)

@@ -80,7 +80,19 @@ module V2
         end
 
         namespace :post do
+          desc '특정 게시글 삭제 (모든 게시글 삭제 가능)'
+          params { requires :post_ids, type: String, desc: '삭제할 게시글 ID들. 콤마로 구분' }
+          delete do
+            ids = convert_string_to_numbers(params[:post_ids])
+            posts = Post.where(id: ids)
+            return failure_response('해당하는 게시글이 존재하지 않습니다.') if posts.empty?
 
+            deleted_ids = posts.pluck(:id)
+            # bulk-deletion 하면 연관된 comment가 destroy 되지를 않는다. 그러므로 post 하나씩 삭제.
+            posts.each { |post| post.destroy }
+            success_response('삭제 완료. 삭제된 게시글 ID 번호는 다음과 같습니다.',
+                             { ID: deleted_ids }.as_json )
+          end
         end
 
         namespace :comment do

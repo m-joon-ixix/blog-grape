@@ -37,6 +37,16 @@ module V2
             represented = ::V1::Entities::Post.represent(posts)
             success_response(nil, represented.as_json)
           end
+
+          desc '현재 사용자의 게시글 전체 삭제'
+          delete do
+            posts = Post.where(user_id: current_user.id)
+
+            return failure_response('현재 사용자의 게시글이 존재하지 않습니다.') if posts.empty?
+            # bulk-deletion 하면 연관된 comment가 destroy 되지를 않는다. 그러므로 post 하나씩 삭제.
+            posts.each { |post| post.destroy }
+            success_response("#{current_user.id}번 사용자의 모든 게시글을 삭제하였습니다.")
+          end
         end
 
         resource ':user_id' do
@@ -45,13 +55,26 @@ module V2
             user = User.find_by(id: params[:user_id])
             return failure_response('사용자를 찾을 수 없습니다.') if user.nil?
 
-            represented = if params[:user_id].to_i == current_user.id || current_user.is_admin?
+            # 여기서는 admin이라도 모든 정보까지는 열람 불가능. 본인일 때만 모든 정보 열람 가능.
+            represented = if params[:user_id].to_i == current_user.id
                             ::V2::Entities::SecretUserInfo.represent(user)
                           else
                             ::V2::Entities::OpenUserInfo.represent(user)
                           end
             success_response(nil, represented.as_json)
           end
+
+          namespace :posts do
+            desc '특정 사용자의 전체 게시글 조회', entity: ::V1::Entities::Post
+            get do
+              return failure_response('사용자를 찾을 수 없습니다.') if User.find_by(id: params[:user_id]).nil?
+
+              posts = Post.where(user_id: params[:user_id]).order('created_at DESC')
+              represented = ::V1::Entities::Post.represent(posts)
+              success_response(nil, represented.as_json)
+            end
+          end
+
         end
       end
     end

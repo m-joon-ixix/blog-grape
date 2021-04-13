@@ -52,7 +52,31 @@ module V2
         end
 
         namespace :category do
+          desc '카테고리 추가', entity: ::V1::Entities::Category, consumes: ['application/x-www-form-urlencoded']
+          params { requires :name, type: String, desc: '추가할 카테고리 이름' }
+          post do
+            return failure_response('이미 존재하는 카테고리입니다.') unless Category.find_by_name(params[:name]).nil?
 
+            category = Category.new(name: params[:name])
+            return failure_response('카테고리 생성에 실패했습니다.', category.errors.messages) unless category.save
+
+            represented = ::V1::Entities::Category.represent(category)
+            success_response(nil, represented.as_json)
+          end
+
+          desc '특정 카테고리 삭제'
+          params { requires :category_ids, type: String, desc: '삭제하려는 카테고리 ID. 콤마로 구분' }
+          delete do
+            ids = convert_string_to_numbers(params[:category_ids])
+            categories = Category.where(id: ids)
+            return failure_response('해당 카테고리가 존재하지 않습니다.') if categories.empty?
+
+            deleted_names = categories.pluck(:name)
+            # 카테고리가 삭제되기 전에 (before_destroy) callback에 걸려서 해당 게시글들의 카테고리가 '기타(0)'로 이동하도록
+            categories.each { |category| category.destroy }
+            success_response('삭제 완료. 삭제된 카테고리의 이름들은 다음과 같습니다.',
+                             { name: deleted_names }.as_json )
+          end
         end
 
         namespace :post do

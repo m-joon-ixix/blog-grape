@@ -6,4 +6,5 @@ class BlogAPI < BaseGrapeAPI
   # before : :access_token = bearer_token if acc_tok.is_not_nil && bearer_token
 
   mount ::V1::Base
+  mount ::V2::Base
 end

@@ -96,7 +96,19 @@ module V2
         end
 
         namespace :comment do
+          desc '특정 댓글 삭제 (모든 댓글 삭제 가능)'
+          params { requires :comment_ids, type: String, desc: '삭제할 댓글 ID들. 콤마로 구분' }
+          delete do
+            ids = convert_string_to_numbers(params[:comment_ids])
+            comments = Comment.where(id: ids)
+            return failure_response('해당하는 댓글이 존재하지 않습니다.') if comments.empty?
 
+            deleted_ids = comments.pluck(:id)
+            # bulk-deletion 하면 연관된 like가 destroy 되지를 않는다. 그러므로 comment 하나씩 삭제.
+            comments.each { |comment| comment.destroy }
+            success_response('삭제 완료. 삭제된 댓글 ID 번호는 다음과 같습니다.',
+                             { ID: deleted_ids }.as_json )
+          end
         end
       end
     end

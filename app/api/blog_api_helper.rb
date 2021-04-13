@@ -22,6 +22,19 @@ module BlogAPIHelper
     error!(failure_response('Authentication Failed!'), 401) unless current_user
   end
 
+  # check if the current_user's api_level is DASHBOARD
+  # @return [void] if user is not admin or doesn't exist, error raised
+  def admin_check!
+    authenticate!
+    error!(failure_response('Admin access level required! Not Authorized!'), 401) unless current_user.is_admin?
+  end
+
+  # @param [String] string with numbers separated with commas: ex) "1,2,3"
+  # @return [Array] array of integers: ex) [1, 2, 3]
+  def convert_string_to_numbers(str)
+    str.split(',').map(&:to_i)
+  end
+
   # bearer_token not defined here
 
   # fetches the parameter :access_token given, and passes it to 'authorized_user'

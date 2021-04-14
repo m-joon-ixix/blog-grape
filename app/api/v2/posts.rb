@@ -47,6 +47,25 @@ module V2
                            { ID: deleted_ids }.as_json )
         end
 
+        namespace :popular do
+          desc '인기 게시글 조회', entity: ::V1::Entities::Post
+          get do
+            # key: post_id, value: popularity of post
+            post_with_popularity = Hash.new
+            Post.all.each do |post|
+              post_with_popularity[post.id] = post.compute_popularity
+            end
+            # post ids with DESC-order popularity (top 10 posts)
+            ordered_post_ids = post_with_popularity.sort { |a, b| b[1] <=> a[1] }
+                                                   .take(10).collect(&:first)
+            # posts in popularity order
+            posts = Post.where(id: ordered_post_ids)
+                        .order("FIELD(id, #{ordered_post_ids.join(', ')})")
+            represented = ::V1::Entities::Post.represent(posts)
+            success_response(nil, represented.as_json)
+          end
+        end
+
         resource ':post_id' do
           desc '특정 게시글 1개 조회', entity: ::V1::Entities::Post
           get do

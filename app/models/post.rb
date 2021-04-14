@@ -45,4 +45,19 @@ class Post < ApplicationRecord
   def num_of_likes
     user_like_posts.count
   end
+
+  # @return [Integer] number of likes within the last 1 week
+  def num_of_recent_likes
+    user_like_posts.where("created_at > ?", 1.week.ago).count
+  end
+
+  # @return [Integer] number of comments within the last 1 week
+  def num_of_recent_comments
+    comments.where("created_at > ?", 1.week.ago).count
+  end
+
+  # @return [Integer] popularity based on recent likes and comments
+  def compute_popularity
+    2 * num_of_recent_likes + num_of_recent_comments
+  end
 end

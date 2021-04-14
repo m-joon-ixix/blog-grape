@@ -26,4 +26,7 @@ class Comment < ApplicationRecord
     post.save
   end
 
+  def num_of_likes
+    user_like_comments.count
+  end
 end

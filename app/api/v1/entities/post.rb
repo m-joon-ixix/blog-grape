@@ -6,6 +6,7 @@ module V1
       expose :user_name, documentation: { type: 'String', desc: '작성자 이름' }
       expose :created_at, documentation: { type: 'DateTime', desc: '게시 시간' }
       expose :num_of_likes, documentation: { type: 'Integer', desc: '좋아요 개수' }
+      expose :num_of_comments, documentation: { type: 'Integer', desc: '댓글 개수' }
     end
   end
 end

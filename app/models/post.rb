@@ -1,5 +1,6 @@
 class Post < ApplicationRecord
   has_many :comments, dependent: :destroy
+  has_many :user_like_posts, dependent: :destroy
   belongs_to :user
   belongs_to :category
 
@@ -41,4 +42,7 @@ class Post < ApplicationRecord
     self.num_of_comments = 0
   end
 
+  def num_of_likes
+    user_like_posts.count
+  end
 end

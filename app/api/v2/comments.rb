@@ -47,6 +47,31 @@ module V2
             represented = ::V1::Entities::Comment.represent(comment)
             success_response(nil, represented.as_json)
           end
+
+          namespace :like do
+            desc '댓글에 좋아요 누르기', entity: ::V2::Entities::UserLikeComment
+            post do
+              return failure_response('해당하는 댓글이 존재하지 않습니다.') if Comment.find_by(id: params[:comment_id]).nil?
+
+              like = UserLikeComment.new(user_id: current_user.id, comment_id: params[:comment_id])
+              # 저장이 안된다는 말은 즉, validation에서 uniqueness가 걸렸다는 말이다.
+              return failure_response('현재 사용자는 이미 댓글에 좋아요를 눌렀습니다.') unless like.save
+
+              represented = ::V2::Entities::UserLikeComment.represent(like)
+              success_response(nil, represented.as_json)
+            end
+
+            desc '댓글에서 좋아요 제거하기'
+            delete do
+              return failure_response('해당하는 댓글이 존재하지 않습니다.') if Comment.find_by(id: params[:comment_id]).nil?
+
+              like = UserLikeComment.find_by(user_id: current_user.id, comment_id: params[:comment_id])
+              return failure_response('현재 사용자는 댓글에 좋아요를 누른 적이 없습니다.') if like.nil?
+
+              like.destroy
+              success_response("#{current_user.id}번 사용자가 #{params[:comment_id]}번 댓글에서 좋아요를 삭제했습니다.")
+            end
+          end
         end
       end
     end

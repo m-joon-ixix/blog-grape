@@ -9,10 +9,10 @@ class User < ApplicationRecord
   has_many :user_like_comments, dependent: :destroy
 
   # 내가 구독하는 것들
-  has_many :subscriptions, :foreign_key => "subscribing_user_id"
+  has_many :subscriptions, :foreign_key => "subscribing_user_id", dependent: :destroy
   has_many :subscribed_users, :through => :subscriptions
   # 내가 구독받는 것들 (나를 구독하는 것들)
-  has_many :inverse_subscriptions, :class_name => "Subscription", :foreign_key => "subscribed_user_id"
+  has_many :inverse_subscriptions, :class_name => "Subscription", :foreign_key => "subscribed_user_id", dependent: :destroy
   has_many :subscribers, :through => :inverse_subscriptions, :source => :subscribing_user
   # Subscription Flow Explanation
   # me -> (subscription) -> subscribed_user

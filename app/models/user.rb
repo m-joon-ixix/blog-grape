@@ -8,6 +8,16 @@ class User < ApplicationRecord
   has_many :user_like_posts, dependent: :destroy
   has_many :user_like_comments, dependent: :destroy
 
+  # 내가 구독하는 것들
+  has_many :subscriptions, :foreign_key => "subscribing_user_id", dependent: :destroy
+  has_many :subscribed_users, :through => :subscriptions
+  # 내가 구독받는 것들 (나를 구독하는 것들)
+  has_many :inverse_subscriptions, :class_name => "Subscription", :foreign_key => "subscribed_user_id", dependent: :destroy
+  has_many :subscribers, :through => :inverse_subscriptions, :source => :subscribing_user
+  # Subscription Flow Explanation
+  # me -> (subscription) -> subscribed_user
+  # subscriber -> (inverse_subscription) -> me
+
   before_create :allocate_default_api_level
   before_save :allocate_access_token
 
@@ -22,6 +32,10 @@ class User < ApplicationRecord
 
   def allocate_default_api_level
     self.api_level = ApiLevel::DEFAULT if self.api_level.nil?
+  end
+
+  def num_of_subscribers
+    subscribers.count
   end
 
   def allocate_access_token

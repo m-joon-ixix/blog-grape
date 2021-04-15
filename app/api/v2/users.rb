@@ -75,6 +75,36 @@ module V2
             end
           end
 
+          namespace :subscribe do
+            desc '사용자 구독'
+            post do
+              # subscription sent 'from' somebody 'to' somebody
+              from = current_user.id
+              to = params[:user_id].to_i
+              return failure_response('자기 자신을 구독할 수는 없습니다.') if from == to
+              return failure_response('사용자를 찾을 수 없습니다.') if User.find_by(id: to).nil?
+
+              subscription = Subscription.new(subscribing_user_id: from, subscribed_user_id: to)
+              # save 가 안됐다는 건 uniqueness validation에서 걸렸다는 뜻
+              return failure_response('이미 구독한 상태입니다.') unless subscription.save
+
+              success_response("#{from}번 사용자가 #{to}번 사용자를 구독하였습니다.")
+            end
+
+            desc '사용자 구독 해제'
+            delete do
+              from = current_user.id
+              to = params[:user_id].to_i
+              return failure_response('자기 자신을 구독 해제할 수는 없습니다.') if from == to
+              return failure_response('사용자를 찾을 수 없습니다.') if User.find_by(id: to).nil?
+
+              subscription = Subscription.find_by(subscribing_user_id: from, subscribed_user_id: to)
+              return failure_response('이 사용자를 구독한 내역이 없습니다.') if subscription.nil?
+
+              subscription.destroy
+              success_response("#{from}번 사용자가 #{to}번 사용자를 구독 해제하였습니다.")
+            end
+          end
         end
       end
     end

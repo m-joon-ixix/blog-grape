@@ -15,6 +15,9 @@ class Post < ApplicationRecord
   # relationship with comments
   before_validation :initialize_num_of_comments, on: :create
 
+  # 0, 1, 2 values - default: 0 (public)
+  enum visibility: [:public_post, :subscriber_only, :private_post]
+
   # always use this when changing the category of a post
   # do not use Post.update(category_id: 000)
   def change_category(new_category_id)

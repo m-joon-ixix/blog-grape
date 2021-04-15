@@ -6,8 +6,18 @@ module V2
 
       namespace :post do
         desc '전체 게시글 조회', entity: ::V1::Entities::Post
+        params { optional :subscribing, type: Boolean, desc: '내가 구독중인 사용자의 게시글만 조회할 지?', default: false }
         get do
-          posts = Post.all.order('created_at DESC')
+          posts = if params[:subscribing]
+                    # 구독중인 사용자와 나의 게시글만 조회
+                    users_that_i_subscribe = current_user.subscriptions.pluck(:subscribed_user_id)
+                    users_that_i_subscribe.append(current_user.id)
+                    Post.where(user_id: users_that_i_subscribe).order('created_at DESC')
+                  else
+                    # 전체 게시글 조회
+                    Post.all.order('created_at DESC')
+                  end
+
           represented = ::V1::Entities::Post.represent(posts)
           success_response(nil, represented.as_json)
         end

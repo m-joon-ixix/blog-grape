@@ -17,12 +17,13 @@ module V2
           requires :title, type: String, desc: '제목'
           requires :body, type: String, desc: '내용'
           requires :category_id, type: Integer, desc: '카테고리 ID'
+          requires :visibility, type: String, desc: '공개 범위 (전체공개/구독자에게만/비공개)',
+                   values: ['public_post', 'subscriber_only', 'private_post']
         end
         post do
-          post = Post.new(title: params[:title],
-                          body: params[:body],
-                          user_id: current_user.id,
-                          category_id: params[:category_id])
+          params.delete(:access_token)
+          post = Post.new(params)
+          post.user_id = current_user.id
           return failure_response('게시글 저장에 실패했습니다.') unless post.save
 
           represented = ::V1::Entities::Post.represent(post)

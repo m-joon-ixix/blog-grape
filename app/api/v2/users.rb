@@ -33,14 +33,14 @@ module V2
         namespace :posts do
           desc '현재 사용자의 게시글 조회', entity: ::V1::Entities::Post
           get do
-            posts = Post.where(user_id: current_user.id).order('created_at DESC')
+            posts = current_user.posts.order('created_at DESC')
             represented = ::V1::Entities::Post.represent(posts)
             success_response(nil, represented.as_json)
           end
 
           desc '현재 사용자의 게시글 전체 삭제'
           delete do
-            posts = Post.where(user_id: current_user.id)
+            posts = current_user.posts
 
             return failure_response('현재 사용자의 게시글이 존재하지 않습니다.') if posts.empty?
             # bulk-deletion 하면 연관된 comment가 destroy 되지를 않는다. 그러므로 post 하나씩 삭제.

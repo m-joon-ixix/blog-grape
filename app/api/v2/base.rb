@@ -4,6 +4,7 @@ module V2
       version 'v2', using: :path
 
       mount ::V2::Admin
+      mount ::V2::Mypage
       mount ::V2::Users
       mount ::V2::Categories
       mount ::V2::Posts

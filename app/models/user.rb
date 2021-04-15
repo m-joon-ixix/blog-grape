@@ -34,6 +34,10 @@ class User < ApplicationRecord
     self.api_level = ApiLevel::DEFAULT if self.api_level.nil?
   end
 
+  def num_of_subscribers
+    subscribers.count
+  end
+
   def allocate_access_token
     self.access_token ||= loop do
       random_token = SecureRandom.urlsafe_base64(32, false)

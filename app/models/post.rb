@@ -26,6 +26,23 @@ class Post < ApplicationRecord
     increment_num_of_posts
   end
 
+  # @return [Boolean] can user with 'current_user_id' see this post?
+  # @param [Integer] current_user_id: user's id
+  def able_to_see(current_user_id)
+    # if the author is current_user
+    return true if user_id == current_user_id
+
+    if visibility == 'public_post'
+      true
+    elsif visibility == 'private_post'
+      false
+    else
+      # if the post is for subscriber only
+      # 'current_user_id' must be subscribing 'user' (author of this post)
+      user.inverse_subscriptions.pluck(:subscribing_user_id).include? current_user_id
+    end
+  end
+
   def user_name
     # User.find(user_id) -> 아랫줄의 user로 찾을 수 있음, 콜 할때마다 DB를 매번 찌른다.
     user.user_name # 이렇게 하면 (belongs_to method의 기능) DB를 처음 한번만 찌른다. (caching)

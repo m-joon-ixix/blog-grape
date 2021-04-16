@@ -16,7 +16,14 @@ class Post < ApplicationRecord
   before_validation :initialize_num_of_comments, on: :create
 
   # 0, 1, 2 values - default: 0 (public)
-  enum visibility: [:public_post, :subscriber_only, :private_post]
+  module Visibility
+    PUBLIC = 'public_post'
+    SUBSCRIBE = 'subscriber_only'
+    PRIVATE = 'private_post'
+    ALL = [PUBLIC, SUBSCRIBE, PRIVATE]
+  end
+
+  enum visibility: Visibility::ALL
 
   # always use this when changing the category of a post
   # do not use Post.update(category_id: 000)
@@ -28,13 +35,13 @@ class Post < ApplicationRecord
 
   # @return [Boolean] can user with 'current_user_id' see this post?
   # @param [Integer] current_user_id: user's id
-  def able_to_see(current_user_id)
+  def able_to_see?(current_user_id)
     # if the author is current_user
     return true if user_id == current_user_id
 
-    if visibility == 'public_post'
+    if visibility == Visibility::PUBLIC
       true
-    elsif visibility == 'private_post'
+    elsif visibility == Visibility::PRIVATE
       false
     else
       # if the post is for subscriber only

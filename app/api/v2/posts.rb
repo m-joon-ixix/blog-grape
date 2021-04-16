@@ -28,7 +28,7 @@ module V2
           requires :body, type: String, desc: '내용'
           requires :category_id, type: Integer, desc: '카테고리 ID'
           requires :visibility, type: String, desc: '공개 범위 (전체공개/구독자에게만/비공개)',
-                   values: ['public_post', 'subscriber_only', 'private_post']
+                   values: Post::Visibility::ALL
         end
         post do
           params.delete(:access_token)

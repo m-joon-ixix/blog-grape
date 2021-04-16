@@ -18,7 +18,7 @@ module V2
             ids = convert_string_to_numbers(params[:category_ids])
             return failure_response('해당 카테고리는 존재하지 않습니다.') if Category.where(id: ids).empty?
 
-            posts = Post.where(category_id: ids).order('created_at DESC')
+            posts = Post.looked_by(current_user).where(category_id: ids).order('created_at DESC')
             represented = ::V1::Entities::Post.represent(posts)
             success_response(nil, represented.as_json)
           end

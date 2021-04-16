@@ -64,6 +64,21 @@ module V2
             success_response(nil, represented.as_json)
           end
 
+          desc '특정 카테고리 수정', entity: ::V1::Entities::Category
+          params do
+            requires :category_id, type: Integer, desc: '수정하려는 카테고리 ID (1개)'
+            requires :name, type: String, desc: '카테고리의 새 이름'
+          end
+          put do
+            category = Category.find_by(id: params[:category_id])
+            return failure_response('해당하는 카테고리가 존재하지 않습니다.') if category.nil?
+            return failure_response('이미 존재하는 카테고리 이름입니다.') unless Category.find_by_name(params[:name]).nil?
+
+            category.update(name: params[:name])
+            represented = ::V1::Entities::Category.represent(category)
+            success_response(nil, represented.as_json)
+          end
+
           desc '특정 카테고리 삭제'
           params { requires :category_ids, type: String, desc: '삭제하려는 카테고리 ID. 콤마로 구분' }
           delete do

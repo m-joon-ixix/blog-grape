@@ -48,6 +48,18 @@ module V2
             success_response(nil, represented.as_json)
           end
 
+          desc '특정 댓글 수정 (본인 댓글만 수정 가능)', entity: ::V1::Entities::Comment
+          params { requires :content, type: String, desc: '새로운 댓글 내용' }
+          put do
+            comment = Comment.find_by(id: params[:comment_id])
+            return failure_response('해당하는 댓글이 존재하지 않습니다.') if comment.nil?
+            return failure_response('해당 댓글을 수정할 권한이 없습니다.') unless comment.user_id == current_user.id
+
+            comment.update(content: params[:content])
+            represented = ::V1::Entities::Comment.represent(comment)
+            success_response(nil, represented.as_json)
+          end
+
           namespace :like do
             desc '댓글에 좋아요 누르기', entity: ::V2::Entities::UserLikeComment
             post do

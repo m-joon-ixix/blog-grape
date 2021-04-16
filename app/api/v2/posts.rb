@@ -27,8 +27,7 @@ module V2
           requires :title, type: String, desc: '제목'
           requires :body, type: String, desc: '내용'
           requires :category_id, type: Integer, desc: '카테고리 ID'
-          requires :visibility, type: String, desc: '공개 범위 (전체공개/구독자에게만/비공개)',
-                   values: Post::Visibility::ALL
+          requires :visibility, type: String, desc: '공개 범위 (전체공개/구독자에게만/비공개)', values: Post::Visibility::ALL
         end
         post do
           params.delete(:access_token)
@@ -84,6 +83,29 @@ module V2
             return failure_response('해당하는 게시글이 존재하지 않습니다.') if post.nil?
             return failure_response('해당 게시글 열람 권한이 없습니다.') unless post.able_to_see?(current_user.id)
 
+            represented = ::V1::Entities::Post.represent(post)
+            success_response(nil, represented.as_json)
+          end
+
+          desc '특정 게시글 수정 (본인 게시글만 수정 가능)', entity: ::V1::Entities::Post
+          params do
+            optional :title, type: String, desc: '제목'
+            optional :body, type: String, desc: '내용'
+            optional :category_id, type: Integer, desc: '카테고리 ID'
+            optional :visibility, type: String, desc: '공개 범위 (전체공개/구독자에게만/비공개)', values: Post::Visibility::ALL
+          end
+          put do
+            post = Post.find_by(id: params[:post_id])
+            return failure_response('해당하는 게시글이 존재하지 않습니다.') if post.nil?
+            return failure_response('해당 게시글을 수정할 권한이 없습니다.') unless post.user_id == current_user.id
+
+            params.delete(:access_token)
+            params.delete(:post_id)
+            # 카테고리 변경은 반드시 이 함수를 통해 해주어야 함
+            post.change_category(params[:category_id]) if params.keys.include? "category_id"
+            params.delete(:category_id)
+
+            post.update(params)
             represented = ::V1::Entities::Post.represent(post)
             success_response(nil, represented.as_json)
           end

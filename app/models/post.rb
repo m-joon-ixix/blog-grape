@@ -33,21 +33,16 @@ class Post < ApplicationRecord
     increment_num_of_posts
   end
 
-  # @return [Boolean] can user with 'current_user_id' see this post?
-  # @param [Integer] current_user_id: user's id
-  def able_to_see?(current_user_id)
-    # if the author is current_user
-    return true if user_id == current_user_id
+  # @return Posts that 'current_user' can look at
+  # @param [User] current_user
+  def self.looked_by(current_user)
+    public_posts = Post.where(visibility: Visibility::PUBLIC)
+    my_private_posts = Post.where(visibility: Visibility::PRIVATE, user_id: current_user.id)
+    # 'current_user'가 구독하는 사람이 작성한 게시글
+    subscribing_posts = Post.where(visibility: Visibility::SUBSCRIBE,
+                                   user_id: current_user.subscriptions.pluck(:subscribed_user_id))
 
-    if visibility == Visibility::PUBLIC
-      true
-    elsif visibility == Visibility::PRIVATE
-      false
-    else
-      # if the post is for subscriber only
-      # 'current_user_id' must be subscribing 'user' (author of this post)
-      user.inverse_subscriptions.pluck(:subscribing_user_id).include? current_user_id
-    end
+    public_posts.or(my_private_posts).or(subscribing_posts)
   end
 
   def user_name

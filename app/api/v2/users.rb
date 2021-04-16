@@ -69,7 +69,7 @@ module V2
             get do
               return failure_response('사용자를 찾을 수 없습니다.') if User.find_by(id: params[:user_id]).nil?
 
-              posts = Post.where(user_id: params[:user_id]).order('created_at DESC')
+              posts = Post.looked_by(current_user).where(user_id: params[:user_id]).order('created_at DESC')
               represented = ::V1::Entities::Post.represent(posts)
               success_response(nil, represented.as_json)
             end

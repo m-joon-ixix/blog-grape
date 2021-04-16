@@ -6,8 +6,18 @@ module V2
 
       namespace :post do
         desc '전체 게시글 조회', entity: ::V1::Entities::Post
+        params { optional :subscribing, type: Boolean, desc: '내가 구독중인 사용자의 게시글만 조회할 지?', default: false }
         get do
-          posts = Post.all.order('created_at DESC')
+          posts = if params[:subscribing]
+                    # 구독중인 사용자와 나의 게시글만 조회
+                    users_that_i_subscribe = current_user.subscriptions.pluck(:subscribed_user_id)
+                    users_that_i_subscribe.append(current_user.id)
+                    Post.looked_by(current_user).where(user_id: users_that_i_subscribe).order('created_at DESC')
+                  else
+                    # 전체 게시글 조회
+                    Post.looked_by(current_user).order('created_at DESC')
+                  end
+
           represented = ::V1::Entities::Post.represent(posts)
           success_response(nil, represented.as_json)
         end
@@ -17,12 +27,13 @@ module V2
           requires :title, type: String, desc: '제목'
           requires :body, type: String, desc: '내용'
           requires :category_id, type: Integer, desc: '카테고리 ID'
+          requires :visibility, type: String, desc: '공개 범위 (전체공개/구독자에게만/비공개)',
+                   values: Post::Visibility::ALL
         end
         post do
-          post = Post.new(title: params[:title],
-                          body: params[:body],
-                          user_id: current_user.id,
-                          category_id: params[:category_id])
+          params.delete(:access_token)
+          post = Post.new(params)
+          post.user_id = current_user.id
           return failure_response('게시글 저장에 실패했습니다.') unless post.save
 
           represented = ::V1::Entities::Post.represent(post)
@@ -52,7 +63,7 @@ module V2
           get do
             # key: post_id, value: popularity of post
             post_with_popularity = Hash.new
-            Post.all.each do |post|
+            Post.looked_by(current_user).each do |post|
               post_with_popularity[post.id] = post.compute_popularity
             end
             # post ids with DESC-order popularity (top 10 posts)
@@ -71,6 +82,7 @@ module V2
           get do
             post = Post.find_by(id: params[:post_id])
             return failure_response('해당하는 게시글이 존재하지 않습니다.') if post.nil?
+            return failure_response('해당 게시글 열람 권한이 없습니다.') unless post.able_to_see?(current_user.id)
 
             represented = ::V1::Entities::Post.represent(post)
             success_response(nil, represented.as_json)
@@ -79,7 +91,9 @@ module V2
           namespace :like do
             desc '게시글에 좋아요 누르기', entity: ::V2::Entities::UserLikePost
             post do
-              return failure_response('해당하는 게시글이 존재하지 않습니다.') if Post.find_by(id: params[:post_id]).nil?
+              post = Post.find_by(id: params[:post_id])
+              return failure_response('해당하는 게시글이 존재하지 않습니다.') if post.nil?
+              return failure_response('해당 게시글 열람 권한이 없습니다.') unless post.able_to_see?(current_user.id)
 
               like = UserLikePost.new(user_id: current_user.id, post_id: params[:post_id])
               # 저장이 안된다는 말은 즉, validation에서 uniqueness가 걸렸다는 말이다.
@@ -91,7 +105,9 @@ module V2
 
             desc '게시글에서 좋아요 제거하기'
             delete do
-              return failure_response('해당하는 게시글이 존재하지 않습니다.') if Post.find_by(id: params[:post_id]).nil?
+              post = Post.find_by(id: params[:post_id])
+              return failure_response('해당하는 게시글이 존재하지 않습니다.') if post.nil?
+              return failure_response('해당 게시글 열람 권한이 없습니다.') unless post.able_to_see?(current_user.id)
 
               like = UserLikePost.find_by(user_id: current_user.id, post_id: params[:post_id])
               return failure_response('현재 사용자는 게시글에 좋아요를 누른 적이 없습니다.') if like.nil?
@@ -104,7 +120,9 @@ module V2
           namespace :comments do
             desc '특정 게시글의 댓글 조회', entity: ::V1::Entities::Comment
             get do
-              return failure_response('해당하는 게시글이 존재하지 않습니다.') if Post.find_by(id: params[:post_id]).nil?
+              post = Post.find_by(id: params[:post_id])
+              return failure_response('해당하는 게시글이 존재하지 않습니다.') if post.nil?
+              return failure_response('해당 게시글 열람 권한이 없습니다.') unless post.able_to_see?(current_user.id)
 
               comments = Comment.where(post_id: params[:post_id]).order('created_at ASC')
               represented = ::V1::Entities::Comment.represent(comments)

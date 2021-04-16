@@ -15,12 +15,51 @@ class Post < ApplicationRecord
   # relationship with comments
   before_validation :initialize_num_of_comments, on: :create
 
+  # 0, 1, 2 values - default: 0 (public)
+  module Visibility
+    PUBLIC = 'public_post'
+    SUBSCRIBE = 'subscriber_only'
+    PRIVATE = 'private_post'
+    ALL = [PUBLIC, SUBSCRIBE, PRIVATE]
+  end
+
+  enum visibility: Visibility::ALL
+
   # always use this when changing the category of a post
   # do not use Post.update(category_id: 000)
   def change_category(new_category_id)
     decrement_num_of_posts
     self.update(category_id: new_category_id)
     increment_num_of_posts
+  end
+
+  # @return Posts that 'current_user' can look at
+  # @param [User] current_user
+  def self.looked_by(current_user)
+    public_posts = Post.where(visibility: Visibility::PUBLIC)
+    my_posts = Post.where(user_id: current_user.id)
+    # 'current_user'가 구독하는 사람이 작성한 게시글
+    subscribing_posts = Post.where(visibility: Visibility::SUBSCRIBE,
+                                   user_id: current_user.subscriptions.pluck(:subscribed_user_id))
+
+    public_posts.or(my_posts).or(subscribing_posts)
+  end
+
+  # @return [Boolean] can user with 'current_user_id' see this post?
+  # @param [Integer] current_user_id
+  def able_to_see?(current_user_id)
+    # if the author is current_user
+    return true if user_id == current_user_id
+
+    if visibility == 'public_post'
+      true
+    elsif visibility == 'private_post'
+      false
+    else
+      # if the post is for subscriber only
+      # 'current_user_id' must be subscribing 'user' (author of this post)
+      user.inverse_subscriptions.pluck(:subscribing_user_id).include? current_user_id
+    end
   end
 
   def user_name

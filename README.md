@@ -10,8 +10,6 @@ The blog supports the following functions, currently only in API request and res
 * able to leave likes on posts and comments.
 * able to view popular posts based on likes and comments.
 * Admin user can control the system through the admin API.
-
-(Functions to be made up - April 15th, 2021)
 * User can modify his/her information through myPage API.
 * A user can subscribe another user, and if he wants, he can view only the posts written by users that he subscribes.
 * able to select visibility of post (public, subscriber only, private)

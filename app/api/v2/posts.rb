@@ -81,7 +81,7 @@ module V2
           get do
             post = Post.find_by(id: params[:post_id])
             return failure_response('해당하는 게시글이 존재하지 않습니다.') if post.nil?
-            return failure_response('해당 게시글 열람 권한이 없습니다.') unless post.able_to_see?(current_user.id)
+            return failure_response('해당 게시글 열람 권한이 없습니다.') unless post.able_to_see?(current_user)
 
             represented = ::V1::Entities::Post.represent(post)
             success_response(nil, represented.as_json)
@@ -115,7 +115,7 @@ module V2
             post do
               post = Post.find_by(id: params[:post_id])
               return failure_response('해당하는 게시글이 존재하지 않습니다.') if post.nil?
-              return failure_response('해당 게시글 열람 권한이 없습니다.') unless post.able_to_see?(current_user.id)
+              return failure_response('해당 게시글 열람 권한이 없습니다.') unless post.able_to_see?(current_user)
 
               like = UserLikePost.new(user_id: current_user.id, post_id: params[:post_id])
               # 저장이 안된다는 말은 즉, validation에서 uniqueness가 걸렸다는 말이다.
@@ -129,7 +129,7 @@ module V2
             delete do
               post = Post.find_by(id: params[:post_id])
               return failure_response('해당하는 게시글이 존재하지 않습니다.') if post.nil?
-              return failure_response('해당 게시글 열람 권한이 없습니다.') unless post.able_to_see?(current_user.id)
+              return failure_response('해당 게시글 열람 권한이 없습니다.') unless post.able_to_see?(current_user)
 
               like = UserLikePost.find_by(user_id: current_user.id, post_id: params[:post_id])
               return failure_response('현재 사용자는 게시글에 좋아요를 누른 적이 없습니다.') if like.nil?
@@ -144,7 +144,7 @@ module V2
             get do
               post = Post.find_by(id: params[:post_id])
               return failure_response('해당하는 게시글이 존재하지 않습니다.') if post.nil?
-              return failure_response('해당 게시글 열람 권한이 없습니다.') unless post.able_to_see?(current_user.id)
+              return failure_response('해당 게시글 열람 권한이 없습니다.') unless post.able_to_see?(current_user)
 
               comments = Comment.where(post_id: params[:post_id]).order('created_at ASC')
               represented = ::V1::Entities::Comment.represent(comments)

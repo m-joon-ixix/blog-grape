@@ -45,11 +45,11 @@ class Post < ApplicationRecord
     public_posts.or(my_posts).or(subscribing_posts)
   end
 
-  # @return [Boolean] can user with 'current_user_id' see this post?
-  # @param [Integer] current_user_id
-  def able_to_see?(current_user_id)
+  # @return [Boolean] can 'current_user' see this post?
+  # @param [User] current_user
+  def able_to_see?(current_user)
     # if the author is current_user
-    return true if user_id == current_user_id
+    return true if user_id == current_user.id
 
     if visibility == 'public_post'
       true
@@ -57,8 +57,8 @@ class Post < ApplicationRecord
       false
     else
       # if the post is for subscriber only
-      # 'current_user_id' must be subscribing 'user' (author of this post)
-      user.inverse_subscriptions.pluck(:subscribing_user_id).include? current_user_id
+      # 'current_user' must be subscribing 'user' (author of this post)
+      current_user.subscriptions.pluck(:subscribed_user_id).include? user_id
     end
   end
 
